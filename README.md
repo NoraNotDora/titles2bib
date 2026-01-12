@@ -8,6 +8,9 @@ Using dblp.org, search titles and its BibTex info.
 conda create -n titles2bibtex python=3.8 -y
 conda activate titles2bibtex
 pip install lxml==4.6.3 requests==2.26.0 beautifulsoup4==4.9.3 pandas==1.3.1 tqdm==4.61.2 matplotlib==3.4.2
+
+# Optional: for Google Scholar fallback search
+pip install scholarly
 ```
 
 
@@ -73,11 +76,37 @@ For example: `papers_titles.csv` (there must be a column with the title named `T
 
 &nbsp;&nbsp;&nbsp;&nbsp;`2`: more condensed (delete string between 'DBLP:' and the 2nd '/' after that)
 
+`--arxiv`[alternative]: enable arxiv as fallback search when dblp fails.
+
+`--scholar`[alternative]: enable Google Scholar as fallback search when dblp fails.
+
+`--fallback`[alternative]: enable both arxiv and Google Scholar as fallback search.
+
+`--api`[alternative]: primary API for search. Options: `dblp` (default), `arxiv`, `scholar`.
+
 ### How to use
 
-
 ```
+# Basic usage (dblp only)
 python titles2bibtex.py --input papers_titles.csv --output references.bib
+
+# Enable arxiv fallback search
+python titles2bibtex.py --input papers_titles.csv --output references.bib --arxiv
+
+# Enable Google Scholar fallback search (requires: pip install scholarly)
+python titles2bibtex.py --input papers_titles.csv --output references.bib --scholar
+
+# Enable both arxiv and Google Scholar fallback search
+python titles2bibtex.py --input papers_titles.csv --output references.bib --fallback
+
+# Use arxiv as primary API
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api arxiv
+
+# Use Google Scholar as primary API
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api scholar
+
+# Use arxiv as primary + dblp/scholar as fallback
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api arxiv --fallback
 ```
 
 ### Output
@@ -180,6 +209,14 @@ ___
 
 &nbsp;&nbsp;&nbsp;&nbsp;`2`: 再精简（删除`DBLP`和其后第二个`/`中间的字符串以精简CiteKey）
 
+`--arxiv`（可选）: 当 dblp 搜索失败时，启用 arxiv 作为备选搜索源。
+
+`--scholar`（可选）: 当 dblp 搜索失败时，启用 Google Scholar 作为备选搜索源。
+
+`--fallback`（可选）: 当 dblp 搜索失败时，同时启用 arxiv 和 Google Scholar 作为备选搜索源。
+
+`--api`（可选）: 指定主要的搜索API。可选值：`dblp`（默认）、`arxiv`、`scholar`。
+
 ### 使用方法
 ```
 pip install lxml
@@ -187,7 +224,26 @@ pip install requests
 pip install beautifulsoup4
 pip install pandas
 
+# 基本用法（仅使用dblp）
 python titles2bibtex.py --input papers_titles.csv --output references.bib
+
+# 启用 arxiv 备选搜索
+python titles2bibtex.py --input papers_titles.csv --output references.bib --arxiv
+
+# 启用 Google Scholar 备选搜索（需要先 pip install scholarly）
+python titles2bibtex.py --input papers_titles.csv --output references.bib --scholar
+
+# 同时启用 arxiv 和 Google Scholar 备选搜索
+python titles2bibtex.py --input papers_titles.csv --output references.bib --fallback
+
+# 指定使用 arxiv 作为主要API
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api arxiv
+
+# 指定使用 Google Scholar 作为主要API
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api scholar
+
+# 使用 arxiv 为主 + 其他API作为备选
+python titles2bibtex.py --input papers_titles.csv --output references.bib --api arxiv --fallback
 
 ```
 

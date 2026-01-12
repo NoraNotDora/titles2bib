@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 import re
+from fallback_search import fallback_search, search_arxiv, search_google_scholar
 
 header = {
     'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/49.0.2623.112 Safari/537.36',
@@ -139,7 +140,21 @@ if  __name__ == '__main__':
                         help='mode you want to open the output file', required = False)
     parser.add_argument("-s","--style", dest="style_of_BibTex", metavar=0, type = int, default=-1,
                         help='style of the BibTex, -1: more condensed (delete string between \'DBLP:\' and the 2nd \'/\' after that), 0: condensed, 1: standard, 2: with crossref', required = False)
+    parser.add_argument("--arxiv", dest="use_arxiv", action="store_true", default=False,
+                        help='enable arxiv as fallback search when dblp fails')
+    parser.add_argument("--scholar", dest="use_scholar", action="store_true", default=False,
+                        help='enable Google Scholar as fallback search when dblp fails')
+    parser.add_argument("--fallback", dest="use_fallback", action="store_true", default=False,
+                        help='enable both arxiv and Google Scholar as fallback search')
+    parser.add_argument("--api", dest="primary_api", metavar="dblp", default="dblp",
+                        choices=["dblp", "arxiv", "scholar"],
+                        help='primary API for search: dblp (default), arxiv, or scholar')
     args = parser.parse_args()
+    
+    # 处理fallback参数
+    use_arxiv = args.use_arxiv or args.use_fallback
+    use_scholar = args.use_scholar or args.use_fallback
+    primary_api = args.primary_api
     
 
     file_input_path = args.input_file_path # The path and name of the file e.g. "D:/input.csv"
@@ -160,21 +175,42 @@ if  __name__ == '__main__':
 
     # search each of titles' names
     for title in df["Title"]:
-        print("=== start searching for {} ===".format(title))
-        url = search_for(title)
-        print(url)
-        if url != False:
+        print("=== start searching for {} [api={}] ===".format(title, primary_api))
+        bibtex_info = None
+        
+        # 根据指定的API进行搜索
+        if primary_api == "dblp":
+            url = search_for(title)
+            print(url)
+            if url != False:
+                bibtex_info = get_bibtex(url, args.style_of_BibTex)
+        elif primary_api == "arxiv":
+            bibtex_info = search_arxiv(title)
+        elif primary_api == "scholar":
+            bibtex_info = search_google_scholar(title)
+        
+        if bibtex_info:
             n_cmplt+=1
             cmplt.append(title)
-            bibtex_info = get_bibtex(url, args.style_of_BibTex)
-            
             print(bibtex_info)
             output_file.write(bibtex_info)
             print("=== completed searching for {} ===\n".format(title))
         else:
-            n_fail+=1
-            fail.append(title)
-            print("=== SORRY! it failed searching for {} ===\n".format(title))
+            # 主API搜索失败，尝试备选搜索
+            if use_arxiv or use_scholar:
+                print("  [{}未找到，尝试备选搜索...]".format(primary_api))
+                bibtex_info = fallback_search(title, use_arxiv=use_arxiv, use_scholar=use_scholar)
+            
+            if bibtex_info:
+                n_cmplt+=1
+                cmplt.append(title)
+                print(bibtex_info)
+                output_file.write(bibtex_info)
+                print("=== completed searching for {} (via fallback) ===\n".format(title))
+            else:
+                n_fail+=1
+                fail.append(title)
+                print("=== SORRY! it failed searching for {} ===\n".format(title))
 
     output_file.close()
     
