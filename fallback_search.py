@@ -116,19 +116,11 @@ def _format_arxiv_bibtex(arxiv_id, title, authors, year, doi=None, journal_ref=N
     bibtex_lines = [
         f"@article{{{cite_key},",
         f"  author    = {{{author_str}}},",
-        f"  title     = {{{title}}},",
-        f"  journal   = {{arXiv Preprint}},",
-        f"  year      = {{{year}}},",
-        f"  url       = {{https://arxiv.org/abs/{arxiv_id}}},"
+        f"  title     = {{{{{title}}}}},",
+        f"  journal   = {{arXiv preprint arXiv:{arxiv_id}}},",
+        f"  year      = {{{year}}}"
     ]
     
-    if doi:
-        bibtex_lines.append(f"  doi       = {{{doi}}},")
-    
-    if journal_ref:
-        bibtex_lines.append(f"  note      = {{{journal_ref}}},")
-    
-    bibtex_lines.append(f"  eprint    = {{{arxiv_id}}},")
     bibtex_lines.append("}")
     
     return '\n'.join(bibtex_lines) + '\n'
